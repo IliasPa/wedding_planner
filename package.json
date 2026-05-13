@@ -1,0 +1,26 @@
+{
+  "name": "wedding-planner",
+  "version": "1.0.0",
+  "description": "Electron preview of wedding_planner.jsx",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "echo 'Run npm start to launch the preview'",
+    "dist": "electron-builder --mac",
+    "dist:dir": "electron-builder --mac --dir"
+  },
+  "build": {
+    "appId": "com.example.weddingplanner",
+    "productName": "Wedding Planner",
+    "files": [
+      "**/*"
+    ],
+    "mac": {
+      "target": ["dmg", "zip"]
+    }
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
