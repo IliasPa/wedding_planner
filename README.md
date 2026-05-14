@@ -23,6 +23,11 @@ nvm use --lts
 npm install
 ```
 
+Sun only the server:
+```bash
+npm run server
+```
+
 Start preview
 
 ```bash
