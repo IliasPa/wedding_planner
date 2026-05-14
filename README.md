@@ -11,6 +11,18 @@ Setup
 npm install
 ```
 
+Instead of committing the `node_modules/` folder, install Node with `nvm` and run `npm install` locally. Example (do this manually):
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+# restart your shell or run:
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm use --lts
+npm install
+```
+
 Start preview
 
 ```bash
