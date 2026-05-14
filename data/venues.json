@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "The Grand Estate",
+    "location": "Tuscany Hills",
+    "capacity": 200,
+    "price": 8500,
+    "style": "Garden & Ballroom",
+    "rating": 4.9,
+    "selected": false,
+    "notes": "Outdoor ceremony space with fountain, indoor reception hall",
+    "image": "🏰"
+  },
+  {
+    "id": 2,
+    "name": "Coastal Cliffs Manor",
+    "location": "Pacific Bluffs",
+    "capacity": 120,
+    "price": 6200,
+    "style": "Oceanfront",
+    "rating": 4.8,
+    "selected": true,
+    "notes": "Stunning ocean views, sunset ceremony packages included",
+    "image": "🌊"
+  },
+  {
+    "id": 3,
+    "name": "Rosewood Vineyard",
+    "location": "Wine Country",
+    "capacity": 150,
+    "price": 7000,
+    "style": "Rustic Vineyard",
+    "rating": 4.7,
+    "selected": false,
+    "notes": "Private vineyard, wine tasting included for guests",
+    "image": "🍷"
+  }
+]

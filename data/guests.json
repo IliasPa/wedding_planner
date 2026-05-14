@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "name": "Sarah & Tom Mitchell",
+    "group": "Family",
+    "rsvp": "confirmed",
+    "dietary": "None",
+    "plusOne": true,
+    "table": 1
+  },
+  {
+    "id": 2,
+    "name": "Emma Clarke",
+    "group": "Friend",
+    "rsvp": "confirmed",
+    "dietary": "Vegetarian",
+    "plusOne": false,
+    "table": null
+  },
+  {
+    "id": 3,
+    "name": "James & Olivia Chen",
+    "group": "Family",
+    "rsvp": "confirmed",
+    "dietary": "None",
+    "plusOne": true,
+    "table": 2
+  },
+  {
+    "id": 4,
+    "name": "Luca Ferrari",
+    "group": "Colleague",
+    "rsvp": "pending",
+    "dietary": "Gluten-free",
+    "plusOne": false,
+    "table": null
+  },
+  {
+    "id": 5,
+    "name": "Ava & Ben Thompson",
+    "group": "Friend",
+    "rsvp": "confirmed",
+    "dietary": "None",
+    "plusOne": true,
+    "table": 2
+  },
+  {
+    "id": 6,
+    "name": "Grandma Rose & Grandpa Harold",
+    "group": "Family",
+    "rsvp": "confirmed",
+    "dietary": "Low-sodium",
+    "plusOne": true,
+    "table": 3
+  },
+  {
+    "id": 7,
+    "name": "Charlotte Davis",
+    "group": "Friend",
+    "rsvp": "declined",
+    "dietary": "Vegan",
+    "plusOne": false,
+    "table": null
+  },
+  {
+    "id": 8,
+    "name": "Ethan & Mia Johnson",
+    "group": "Colleague",
+    "rsvp": "confirmed",
+    "dietary": "None",
+    "plusOne": true,
+    "table": 3
+  },
+  {
+    "id": 9,
+    "name": "Sophie Wilson",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "None",
+    "plusOne": false,
+    "table": null
+  },
+  {
+    "id": 10,
+    "name": "Mr & Mrs García",
+    "group": "Family",
+    "rsvp": "confirmed",
+    "dietary": "None",
+    "plusOne": true,
+    "table": 4
+  },
+  {
+    "name": "Ilias",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "None",
+    "plusOne": false,
+    "id": 1778715872167,
+    "table": 2
+  },
+  {
+    "name": "Iliasdd",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "None",
+    "plusOne": false,
+    "id": 1778716364562,
+    "table": null
+  },
+  {
+    "name": "Iliasdsfsd",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "None",
+    "plusOne": false,
+    "id": 1778716420688,
+    "table": null
+  },
+  {
+    "name": "mnvmn",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "None",
+    "plusOne": false,
+    "id": 1778716636332,
+    "table": null
+  }
+]

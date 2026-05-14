@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "Isabelle Laurent",
+    "style": "Fine Art & Editorial",
+    "price": 3800,
+    "hours": 10,
+    "selected": false,
+    "rating": 5.0,
+    "specialties": ["Golden Hour", "Documentary", "Portraits"],
+    "image": "📷"
+  },
+  {
+    "id": 2,
+    "name": "Marco & Sofia Rossi",
+    "style": "Romantic & Timeless",
+    "price": 4200,
+    "hours": 12,
+    "selected": true,
+    "rating": 4.9,
+    "specialties": ["Drone", "Video Add-on", "Albums"],
+    "image": "🎞"
+  },
+  {
+    "id": 3,
+    "name": "James Whitfield",
+    "style": "Candid & Lifestyle",
+    "price": 2900,
+    "hours": 8,
+    "selected": false,
+    "rating": 4.8,
+    "specialties": ["Black & White", "Photojournalism"],
+    "image": "✨"
+  }
+]

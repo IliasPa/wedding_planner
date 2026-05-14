@@ -1,0 +1,7 @@
+[
+  { "id": 1, "name": "Sweetheart Table", "capacity": 2, "shape": "rectangle" },
+  { "id": 2, "name": "Family Table A", "capacity": 8, "shape": "round" },
+  { "id": 3, "name": "Family Table B", "capacity": 8, "shape": "round" },
+  { "id": 4, "name": "Friends Circle", "capacity": 8, "shape": "round" },
+  { "id": 5, "name": "Colleagues Corner", "capacity": 6, "shape": "round" }
+]
