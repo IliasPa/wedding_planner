@@ -141,22 +141,6 @@ npm start
 
 ---
 
-## Customising Your Wedding Details
-
-Edit `data/meta.json` to set your names and wedding date:
-
-```json
-{
-  "wedding_date": "2026-07-18",
-  "partner1_name": "Emma",
-  "partner2_name": "James"
-}
-```
-
-The countdown and date displayed in the app update automatically.
-
----
-
 ## Packaging a Native .app (optional)
 
 ```bash
