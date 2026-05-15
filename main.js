@@ -4,9 +4,11 @@ const fs = require("fs");
 const path = require("path");
 
 function createWindow() {
+  const iconPath = path.join(__dirname, "icon.png");
   const win = new BrowserWindow({
     width: 1100,
     height: 820,
+    icon: iconPath,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -20,6 +22,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  const iconPath = path.join(__dirname, "icon.png");
+  try {
+    if (app.dock && typeof app.dock.setIcon === "function")
+      app.dock.setIcon(iconPath);
+  } catch (e) {}
   createWindow();
 
   app.on("activate", () => {

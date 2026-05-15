@@ -5,13 +5,13 @@
       "id": 1,
       "name": "Venue",
       "budget": 8500,
-      "spent": 6200,
+      "spent": 7400,
       "color": "#B5737F"
     },
     {
       "id": 2,
       "name": "Catering",
-      "budget": 8000,
+      "budget": 7000,
       "spent": 3500,
       "color": "#8A9E80"
     },
@@ -61,7 +61,7 @@
       "id": 9,
       "name": "Miscellaneous",
       "budget": 1700,
-      "spent": 620,
+      "spent": 700,
       "color": "#8C7B74"
     }
   ]

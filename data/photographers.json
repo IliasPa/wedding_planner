@@ -5,10 +5,15 @@
     "style": "Fine Art & Editorial",
     "price": 3800,
     "hours": 10,
-    "selected": false,
-    "rating": 5.0,
-    "specialties": ["Golden Hour", "Documentary", "Portraits"],
-    "image": "📷"
+    "selected": true,
+    "rating": 5,
+    "specialties": [
+      "Golden Hour",
+      "Documentary",
+      "Portraits"
+    ],
+    "image": "📷",
+    "deleted": false
   },
   {
     "id": 2,
@@ -16,10 +21,15 @@
     "style": "Romantic & Timeless",
     "price": 4200,
     "hours": 12,
-    "selected": true,
+    "selected": false,
     "rating": 4.9,
-    "specialties": ["Drone", "Video Add-on", "Albums"],
-    "image": "🎞"
+    "specialties": [
+      "Drone",
+      "Video Add-on",
+      "Albums"
+    ],
+    "image": "🎞",
+    "deleted": false
   },
   {
     "id": 3,
@@ -29,7 +39,26 @@
     "hours": 8,
     "selected": false,
     "rating": 4.8,
-    "specialties": ["Black & White", "Photojournalism"],
-    "image": "✨"
+    "specialties": [
+      "Black & White",
+      "Photojournalism"
+    ],
+    "image": "✨",
+    "deleted": false
+  },
+  {
+    "name": "njjmn",
+    "style": "h",
+    "price": 111,
+    "hours": 3,
+    "rating": 5,
+    "specialties": [
+      "ok",
+      "ko"
+    ],
+    "image": "📷",
+    "selected": false,
+    "deleted": true,
+    "id": "20260515210537"
   }
 ]

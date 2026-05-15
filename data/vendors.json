@@ -7,7 +7,8 @@
     "phone": "+1 555 0142",
     "price": 3500,
     "status": "booked",
-    "notes": "Menu tasting scheduled for next month"
+    "notes": "Menu tasting scheduled for next month",
+    "deleted": false
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "phone": "+1 555 0167",
     "price": 1200,
     "status": "pending",
-    "notes": "Quote received, reviewing arrangements"
+    "notes": "Quote received, reviewing arrangements",
+    "deleted": false
   },
   {
     "id": 3,
@@ -27,7 +29,8 @@
     "phone": "+1 555 0198",
     "price": 800,
     "status": "booked",
-    "notes": "Playlist meeting in 3 weeks"
+    "notes": "Playlist meeting in 3 weeks",
+    "deleted": false
   },
   {
     "id": 4,
@@ -48,5 +51,16 @@
     "price": 480,
     "status": "pending",
     "notes": "Tasting appointment needed"
+  },
+  {
+    "type": "Lighting",
+    "name": "Ilummination",
+    "contact": "email@gmail.com",
+    "phone": "32432",
+    "price": 1000,
+    "status": "booked",
+    "notes": "σδφγιηλξκηγφξυηωγη",
+    "id": "20260515203644",
+    "deleted": false
   }
 ]

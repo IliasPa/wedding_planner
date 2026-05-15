@@ -6,7 +6,8 @@
     "rsvp": "confirmed",
     "dietary": "None",
     "plusOne": true,
-    "table": 1
+    "table": 1,
+    "deleted": false
   },
   {
     "id": 2,
@@ -15,7 +16,8 @@
     "rsvp": "confirmed",
     "dietary": "Vegetarian",
     "plusOne": false,
-    "table": null
+    "table": null,
+    "deleted": false
   },
   {
     "id": 3,
@@ -24,7 +26,8 @@
     "rsvp": "confirmed",
     "dietary": "None",
     "plusOne": true,
-    "table": 2
+    "table": 2,
+    "deleted": false
   },
   {
     "id": 4,
@@ -105,24 +108,47 @@
     "dietary": "None",
     "plusOne": false,
     "id": 1778716364562,
-    "table": null
+    "table": null,
+    "deleted": true
   },
   {
-    "name": "Iliasdsfsd",
+    "name": "ilias3",
+    "group": "Friend",
+    "rsvp": "pending",
+    "dietary": "Vegetarian",
+    "plusOne": false,
+    "id": 1778866133516,
+    "table": 3,
+    "deleted": false
+  },
+  {
+    "name": "ilia4",
+    "group": "Partner's Family",
+    "rsvp": "pending",
+    "dietary": "Low-sodium",
+    "plusOne": false,
+    "id": 1778868925646,
+    "table": 1,
+    "deleted": true
+  },
+  {
+    "name": "ilias 6",
     "group": "Friend",
     "rsvp": "pending",
     "dietary": "None",
     "plusOne": false,
-    "id": 1778716420688,
-    "table": null
+    "id": 1778874228311,
+    "table": null,
+    "deleted": false
   },
   {
-    "name": "mnvmn",
+    "name": "Zan",
     "group": "Friend",
-    "rsvp": "pending",
+    "rsvp": "confirmed",
     "dietary": "None",
     "plusOne": false,
-    "id": 1778716636332,
-    "table": null
+    "id": 1778877109742,
+    "table": null,
+    "deleted": true
   }
 ]

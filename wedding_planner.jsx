@@ -1,5 +1,27 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = "http://localhost:3001/api";
+
+async function apiPost(collection, item) {
+  const r = await fetch(`${API_BASE}/${collection}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function apiPatch(collection, id, patch) {
+  const r = await fetch(`${API_BASE}/${collection}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 const COLORS = {
   rose: "#B5737F",
   roseLight: "#F5E8EB",
@@ -164,15 +186,144 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
+function TrashButton({ count, onClick, active }) {
+  return (
+    <button
+      onClick={onClick}
+      title="View deleted items"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+        padding: "6px 12px",
+        background: active ? COLORS.roseLight : "transparent",
+        color: active ? COLORS.rose : COLORS.muted,
+        border: `1px solid ${active ? COLORS.rose : COLORS.border}`,
+        borderRadius: 8,
+        cursor: "pointer",
+        fontFamily: "'DM Sans', sans-serif",
+        fontSize: 14,
+      }}
+    >
+      🗑
+      {count > 0 && (
+        <span
+          style={{
+            background: COLORS.rose,
+            color: "#fff",
+            borderRadius: "50%",
+            minWidth: 18,
+            height: 18,
+            fontSize: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            padding: "0 3px",
+          }}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function TrashPanel({ items, onRestore, renderItem }) {
+  return (
+    <div
+      style={{
+        background: "#FFF8F8",
+        border: `1px solid ${COLORS.roseMid}`,
+        borderRadius: 12,
+        padding: "14px 18px",
+        marginBottom: 16,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 11,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: COLORS.rose,
+          marginBottom: 10,
+          fontWeight: 600,
+        }}
+      >
+        Deleted Items
+      </div>
+      {items.length === 0 ? (
+        <div
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            color: COLORS.muted,
+          }}
+        >
+          No deleted items
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {items.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "7px 12px",
+                background: COLORS.white,
+                borderRadius: 8,
+                border: `1px solid ${COLORS.border}`,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                  color: COLORS.muted,
+                }}
+              >
+                {renderItem(item)}
+              </span>
+              <button
+                onClick={() => onRestore(item.id)}
+                style={{
+                  padding: "4px 12px",
+                  background: COLORS.sage,
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  flexShrink: 0,
+                  marginLeft: 12,
+                }}
+              >
+                Restore
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Overview({ budget, guests, checklist, venues, photographers }) {
   const daysLeft = getDaysUntil();
   const totalSpent = budget.categories.reduce((s, c) => s + c.spent, 0);
-  const confirmed = guests.filter((g) => g.rsvp === "confirmed").length;
-  const done = checklist.filter((c) => c.done).length;
-  const selectedVenue = venues.find((v) => v.selected);
-  const selectedPhoto = photographers.find((p) => p.selected);
+  const activeGuests = guests.filter((g) => !g.deleted);
+  const activeChecklist = checklist.filter((c) => !c.deleted);
+  const confirmed = activeGuests.filter((g) => g.rsvp === "confirmed").length;
+  const done = activeChecklist.filter((c) => c.done).length;
+  const selectedVenue = venues.find((v) => v.selected && !v.deleted);
+  const selectedPhoto = photographers.find((p) => p.selected && !p.deleted);
   const pct = Math.round((totalSpent / budget.total) * 100);
-  const taskPct = Math.round((done / checklist.length) * 100);
+  const taskPct = Math.round((done / Math.max(1, activeChecklist.length)) * 100);
 
   return (
     <div>
@@ -226,13 +377,13 @@ function Overview({ budget, guests, checklist, venues, photographers }) {
         <StatCard
           label="Guests Confirmed"
           value={confirmed}
-          sub={`of ${guests.length} invited`}
+          sub={`of ${activeGuests.length} invited`}
           accent={COLORS.sage}
         />
         <StatCard
           label="Tasks Done"
           value={`${taskPct}%`}
-          sub={`${done} of ${checklist.length} tasks`}
+          sub={`${done} of ${activeChecklist.length} tasks`}
           accent={COLORS.brown}
         />
       </div>
@@ -324,7 +475,7 @@ function Overview({ budget, guests, checklist, venues, photographers }) {
           </div>
           {["Venue", "Photography", "Catering", "Stationery", "Beauty"].map(
             (cat) => {
-              const tasks = checklist.filter((t) => t.category === cat);
+              const tasks = activeChecklist.filter((t) => t.category === cat);
               const doneTasks = tasks.filter((t) => t.done).length;
               const pct = tasks.length
                 ? Math.round((doneTasks / tasks.length) * 100)
@@ -896,22 +1047,169 @@ function Budget({ budget, setBudget }) {
 }
 
 function Venues({ venues, setVenues }) {
+  const [showTrash, setShowTrash] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newVenue, setNewVenue] = useState({
+    name: "",
+    location: "",
+    capacity: "",
+    price: "",
+    style: "",
+    rating: "",
+    notes: "",
+    image: "🏛",
+  });
+
+  const active = venues.filter((v) => !v.deleted);
+  const deleted = venues.filter((v) => v.deleted);
+
   const selectVenue = (id) =>
     setVenues((vs) => vs.map((v) => ({ ...v, selected: v.id === id })));
+
+  const addVenue = async () => {
+    if (!newVenue.name) return;
+    const item = {
+      ...newVenue,
+      capacity: parseInt(newVenue.capacity) || 0,
+      price: parseFloat(newVenue.price) || 0,
+      rating: parseFloat(newVenue.rating) || 0,
+      selected: false,
+      deleted: false,
+    };
+    try {
+      const saved = await apiPost("venues", item);
+      setVenues((vs) => [...vs, saved]);
+      setNewVenue({ name: "", location: "", capacity: "", price: "", style: "", rating: "", notes: "", image: "🏛" });
+      setShowAdd(false);
+    } catch (e) {
+      console.warn("Failed to add venue", e);
+    }
+  };
+
+  const deleteVenue = async (id) => {
+    try {
+      await apiPatch("venues", id, { deleted: true });
+      setVenues((vs) => vs.map((v) => (v.id === id ? { ...v, deleted: true } : v)));
+    } catch (e) {
+      console.warn("Failed to delete venue", e);
+    }
+  };
+
+  const restoreVenue = async (id) => {
+    try {
+      await apiPatch("venues", id, { deleted: false });
+      setVenues((vs) => vs.map((v) => (v.id === id ? { ...v, deleted: false } : v)));
+    } catch (e) {
+      console.warn("Failed to restore venue", e);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "7px 10px",
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 8,
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    background: COLORS.white,
+    boxSizing: "border-box",
+  };
+  const labelStyle = {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 11,
+    color: COLORS.muted,
+    marginBottom: 4,
+  };
 
   return (
     <div>
       <SectionTitle sub="Compare and select the perfect setting for your ceremony and reception">
         Venue Options
       </SectionTitle>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setShowAdd((s) => !s)}
+          style={{
+            padding: "7px 16px",
+            background: showAdd ? COLORS.roseLight : COLORS.rose,
+            color: showAdd ? COLORS.rose : "#fff",
+            border: `1px solid ${COLORS.rose}`,
+            borderRadius: 8,
+            cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          + Add Venue
+        </button>
+        <TrashButton count={deleted.length} onClick={() => setShowTrash((s) => !s)} active={showTrash} />
+      </div>
+
+      {showTrash && (
+        <TrashPanel
+          items={deleted}
+          onRestore={restoreVenue}
+          renderItem={(v) => `${v.image || "🏛"} ${v.name} · ${v.location}`}
+        />
+      )}
+
+      {showAdd && (
+        <Card style={{ marginBottom: 16, background: COLORS.roseLight, border: `1px solid ${COLORS.roseMid}` }}>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: COLORS.rose, marginBottom: 14, fontWeight: 600 }}>
+            New Venue
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div>
+              <div style={labelStyle}>Name</div>
+              <input value={newVenue.name} onChange={(e) => setNewVenue((n) => ({ ...n, name: e.target.value }))} placeholder="Venue name" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Location</div>
+              <input value={newVenue.location} onChange={(e) => setNewVenue((n) => ({ ...n, location: e.target.value }))} placeholder="City / Region" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Style</div>
+              <input value={newVenue.style} onChange={(e) => setNewVenue((n) => ({ ...n, style: e.target.value }))} placeholder="e.g. Garden" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Emoji</div>
+              <input value={newVenue.image} onChange={(e) => setNewVenue((n) => ({ ...n, image: e.target.value }))} placeholder="🏛" style={{ ...inputStyle, fontSize: 20 }} />
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 10, alignItems: "end" }}>
+            <div>
+              <div style={labelStyle}>Price ($)</div>
+              <input value={newVenue.price} onChange={(e) => setNewVenue((n) => ({ ...n, price: e.target.value }))} placeholder="0" type="number" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Capacity</div>
+              <input value={newVenue.capacity} onChange={(e) => setNewVenue((n) => ({ ...n, capacity: e.target.value }))} placeholder="guests" type="number" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Rating</div>
+              <input value={newVenue.rating} onChange={(e) => setNewVenue((n) => ({ ...n, rating: e.target.value }))} placeholder="0.0" type="number" step="0.1" style={inputStyle} />
+            </div>
+            <button
+              onClick={addVenue}
+              style={{ padding: "7px 20px", background: COLORS.rose, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}
+            >
+              Save Venue
+            </button>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <div style={labelStyle}>Notes</div>
+            <input value={newVenue.notes} onChange={(e) => setNewVenue((n) => ({ ...n, notes: e.target.value }))} placeholder="Additional notes…" style={inputStyle} />
+          </div>
+        </Card>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-        {venues.map((v) => (
+        {active.map((v) => (
           <Card
             key={v.id}
             style={{
-              border: v.selected
-                ? `2px solid ${COLORS.rose}`
-                : `1px solid ${COLORS.border}`,
+              border: v.selected ? `2px solid ${COLORS.rose}` : `1px solid ${COLORS.border}`,
               position: "relative",
             }}
           >
@@ -923,98 +1221,43 @@ function Venues({ venues, setVenues }) {
             <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
               <div style={{ fontSize: 48, lineHeight: 1 }}>{v.image}</div>
               <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 12,
-                    marginBottom: 4,
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: 26,
-                      fontWeight: 500,
-                      color: COLORS.ink,
-                      margin: 0,
-                    }}
-                  >
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 500, color: COLORS.ink, margin: 0 }}>
                     {v.name}
                   </h3>
-                  <span
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 13,
-                      color: COLORS.muted,
-                    }}
-                  >
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.muted }}>
                     {v.location}
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginBottom: 10,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Badge color={COLORS.brown} bg={COLORS.champagne}>
-                    {v.style}
-                  </Badge>
-                  <Badge color={COLORS.sage} bg={COLORS.sageLight}>
-                    Up to {v.capacity} guests
-                  </Badge>
-                  <Badge color={COLORS.gold} bg={COLORS.goldLight}>
-                    ⭐ {v.rating}
-                  </Badge>
+                <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                  <Badge color={COLORS.brown} bg={COLORS.champagne}>{v.style}</Badge>
+                  <Badge color={COLORS.sage} bg={COLORS.sageLight}>Up to {v.capacity} guests</Badge>
+                  <Badge color={COLORS.gold} bg={COLORS.goldLight}>⭐ {v.rating}</Badge>
                 </div>
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
-                    color: COLORS.muted,
-                    margin: "0 0 12px",
-                    lineHeight: 1.6,
-                  }}
-                >
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.muted, margin: "0 0 12px", lineHeight: 1.6 }}>
                   {v.notes}
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: 24,
-                      fontWeight: 500,
-                      color: COLORS.rose,
-                    }}
-                  >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 500, color: COLORS.rose }}>
                     ${v.price.toLocaleString()}
                   </span>
-                  {!v.selected && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    {!v.selected && (
+                      <button
+                        onClick={() => selectVenue(v.id)}
+                        style={{ padding: "8px 20px", background: "transparent", color: COLORS.rose, border: `1px solid ${COLORS.rose}`, borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}
+                      >
+                        Select This Venue
+                      </button>
+                    )}
                     <button
-                      onClick={() => selectVenue(v.id)}
-                      style={{
-                        padding: "8px 20px",
-                        background: "transparent",
-                        color: COLORS.rose,
-                        border: `1px solid ${COLORS.rose}`,
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: 14,
-                      }}
+                      onClick={() => deleteVenue(v.id)}
+                      title="Delete venue"
+                      style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.muted, cursor: "pointer", fontSize: 15, padding: "6px 10px", lineHeight: 1 }}
                     >
-                      Select This Venue
+                      🗑
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1026,24 +1269,162 @@ function Venues({ venues, setVenues }) {
 }
 
 function Photographers({ photographers, setPhotographers }) {
+  const [showTrash, setShowTrash] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newPhoto, setNewPhoto] = useState({
+    name: "",
+    style: "",
+    price: "",
+    hours: "",
+    rating: "",
+    specialties: "",
+    image: "📷",
+  });
+
+  const active = photographers.filter((p) => !p.deleted);
+  const deleted = photographers.filter((p) => p.deleted);
+
   const select = (id) =>
     setPhotographers((ps) => ps.map((p) => ({ ...p, selected: p.id === id })));
+
+  const addPhotographer = async () => {
+    if (!newPhoto.name) return;
+    const item = {
+      name: newPhoto.name,
+      style: newPhoto.style,
+      price: parseFloat(newPhoto.price) || 0,
+      hours: parseInt(newPhoto.hours) || 0,
+      rating: parseFloat(newPhoto.rating) || 0,
+      specialties: newPhoto.specialties.split(",").map((s) => s.trim()).filter(Boolean),
+      image: newPhoto.image || "📷",
+      selected: false,
+      deleted: false,
+    };
+    try {
+      const saved = await apiPost("photographers", item);
+      setPhotographers((ps) => [...ps, saved]);
+      setNewPhoto({ name: "", style: "", price: "", hours: "", rating: "", specialties: "", image: "📷" });
+      setShowAdd(false);
+    } catch (e) {
+      console.warn("Failed to add photographer", e);
+    }
+  };
+
+  const deletePhotographer = async (id) => {
+    try {
+      await apiPatch("photographers", id, { deleted: true });
+      setPhotographers((ps) => ps.map((p) => (p.id === id ? { ...p, deleted: true } : p)));
+    } catch (e) {
+      console.warn("Failed to delete photographer", e);
+    }
+  };
+
+  const restorePhotographer = async (id) => {
+    try {
+      await apiPatch("photographers", id, { deleted: false });
+      setPhotographers((ps) => ps.map((p) => (p.id === id ? { ...p, deleted: false } : p)));
+    } catch (e) {
+      console.warn("Failed to restore photographer", e);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "7px 10px",
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 8,
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    background: COLORS.white,
+    boxSizing: "border-box",
+  };
+  const labelStyle = { fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: COLORS.muted, marginBottom: 4 };
 
   return (
     <div>
       <SectionTitle sub="Choose your artist to capture every magical moment">
         Photographers
       </SectionTitle>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}
-      >
-        {photographers.map((p) => (
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setShowAdd((s) => !s)}
+          style={{
+            padding: "7px 16px",
+            background: showAdd ? COLORS.roseLight : COLORS.rose,
+            color: showAdd ? COLORS.rose : "#fff",
+            border: `1px solid ${COLORS.rose}`,
+            borderRadius: 8,
+            cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          + Add Photographer
+        </button>
+        <TrashButton count={deleted.length} onClick={() => setShowTrash((s) => !s)} active={showTrash} />
+      </div>
+
+      {showTrash && (
+        <TrashPanel
+          items={deleted}
+          onRestore={restorePhotographer}
+          renderItem={(p) => `${p.image || "📷"} ${p.name} · ${p.style}`}
+        />
+      )}
+
+      {showAdd && (
+        <Card style={{ marginBottom: 16, background: COLORS.roseLight, border: `1px solid ${COLORS.roseMid}` }}>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: COLORS.rose, marginBottom: 14, fontWeight: 600 }}>
+            New Photographer
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div>
+              <div style={labelStyle}>Name</div>
+              <input value={newPhoto.name} onChange={(e) => setNewPhoto((n) => ({ ...n, name: e.target.value }))} placeholder="Photographer name" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Style</div>
+              <input value={newPhoto.style} onChange={(e) => setNewPhoto((n) => ({ ...n, style: e.target.value }))} placeholder="e.g. Candid" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Price ($)</div>
+              <input value={newPhoto.price} onChange={(e) => setNewPhoto((n) => ({ ...n, price: e.target.value }))} placeholder="0" type="number" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Emoji</div>
+              <input value={newPhoto.image} onChange={(e) => setNewPhoto((n) => ({ ...n, image: e.target.value }))} placeholder="📷" style={{ ...inputStyle, fontSize: 20 }} />
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr auto", gap: 10, alignItems: "end" }}>
+            <div>
+              <div style={labelStyle}>Hours</div>
+              <input value={newPhoto.hours} onChange={(e) => setNewPhoto((n) => ({ ...n, hours: e.target.value }))} placeholder="hrs" type="number" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Rating</div>
+              <input value={newPhoto.rating} onChange={(e) => setNewPhoto((n) => ({ ...n, rating: e.target.value }))} placeholder="0.0" type="number" step="0.1" style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Specialties (comma-separated)</div>
+              <input value={newPhoto.specialties} onChange={(e) => setNewPhoto((n) => ({ ...n, specialties: e.target.value }))} placeholder="e.g. Portraits, Drone" style={inputStyle} />
+            </div>
+            <button
+              onClick={addPhotographer}
+              style={{ padding: "7px 20px", background: COLORS.rose, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}
+            >
+              Save
+            </button>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        {active.map((p) => (
           <Card
             key={p.id}
             style={{
-              border: p.selected
-                ? `2px solid ${COLORS.rose}`
-                : `1px solid ${COLORS.border}`,
+              border: p.selected ? `2px solid ${COLORS.rose}` : `1px solid ${COLORS.border}`,
               position: "relative",
             }}
           >
@@ -1054,140 +1435,57 @@ function Photographers({ photographers, setPhotographers }) {
             )}
             <div style={{ textAlign: "center", marginBottom: 12 }}>
               <div style={{ fontSize: 40, marginBottom: 8 }}>{p.image}</div>
-              <h3
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: 22,
-                  fontWeight: 500,
-                  color: COLORS.ink,
-                  margin: "0 0 4px",
-                }}
-              >
+              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 500, color: COLORS.ink, margin: "0 0 4px" }}>
                 {p.name}
               </h3>
-              <div
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  color: COLORS.muted,
-                }}
-              >
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.muted }}>
                 {p.style}
               </div>
             </div>
-            <div
-              style={{
-                borderTop: `1px solid ${COLORS.border}`,
-                paddingTop: 12,
-                marginBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: COLORS.muted,
-                  }}
-                >
-                  Package
-                </span>
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: COLORS.ink,
-                  }}
-                >
-                  ${p.price.toLocaleString()}
-                </span>
+            <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 12, marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.muted }}>Package</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: COLORS.ink }}>${p.price.toLocaleString()}</span>
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: COLORS.muted,
-                  }}
-                >
-                  Hours
-                </span>
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: COLORS.ink,
-                  }}
-                >
-                  {p.hours} hrs
-                </span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.muted }}>Hours</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: COLORS.ink }}>{p.hours} hrs</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: COLORS.muted,
-                  }}
-                >
-                  Rating
-                </span>
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: COLORS.gold,
-                  }}
-                >
-                  ⭐ {p.rating}
-                </span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.muted }}>Rating</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: COLORS.gold }}>⭐ {p.rating}</span>
               </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 4,
-                marginBottom: 14,
-              }}
-            >
-              {p.specialties.map((s) => (
-                <Badge key={s} color={COLORS.muted} bg={COLORS.bg}>
-                  {s}
-                </Badge>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 14 }}>
+              {(p.specialties || []).map((s) => (
+                <Badge key={s} color={COLORS.muted} bg={COLORS.bg}>{s}</Badge>
               ))}
             </div>
-            <button
-              onClick={() => select(p.id)}
-              style={{
-                width: "100%",
-                padding: "8px",
-                background: p.selected ? COLORS.roseLight : "transparent",
-                color: COLORS.rose,
-                border: `1px solid ${COLORS.rose}`,
-                borderRadius: 10,
-                cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-              }}
-            >
-              {p.selected ? "✓ Selected" : "Select"}
-            </button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                onClick={() => select(p.id)}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: p.selected ? COLORS.roseLight : "transparent",
+                  color: COLORS.rose,
+                  border: `1px solid ${COLORS.rose}`,
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                }}
+              >
+                {p.selected ? "✓ Selected" : "Select"}
+              </button>
+              <button
+                onClick={() => deletePhotographer(p.id)}
+                title="Delete photographer"
+                style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.muted, cursor: "pointer", fontSize: 15, padding: "6px 10px", lineHeight: 1 }}
+              >
+                🗑
+              </button>
+            </div>
           </Card>
         ))}
       </div>
@@ -1198,6 +1496,8 @@ function Photographers({ photographers, setPhotographers }) {
 function Guests({ guests, setGuests }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const [newGuest, setNewGuest] = useState({
     name: "",
     group: "Friend",
@@ -1205,9 +1505,11 @@ function Guests({ guests, setGuests }) {
     dietary: "None",
     plusOne: false,
   });
-  const [showAdd, setShowAdd] = useState(false);
 
-  const filtered = guests.filter((g) => {
+  const activeGuests = guests.filter((g) => !g.deleted);
+  const deletedGuests = guests.filter((g) => g.deleted);
+
+  const filtered = activeGuests.filter((g) => {
     const matchFilter = filter === "all" || g.rsvp === filter;
     const matchSearch = g.name.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
@@ -1215,24 +1517,35 @@ function Guests({ guests, setGuests }) {
 
   const addGuest = () => {
     if (!newGuest.name) return;
-    setGuests((gs) => [...gs, { ...newGuest, id: Date.now(), table: null }]);
-    setNewGuest({
-      name: "",
-      group: "Friend",
-      rsvp: "pending",
-      dietary: "None",
-      plusOne: false,
-    });
+    setGuests((gs) => [...gs, { ...newGuest, id: Date.now(), table: null, deleted: false }]);
+    setNewGuest({ name: "", group: "Friend", rsvp: "pending", dietary: "None", plusOne: false });
     setShowAdd(false);
   };
 
-  const removeGuest = (id) => setGuests((gs) => gs.filter((g) => g.id !== id));
+  const deleteGuest = async (id) => {
+    try {
+      await apiPatch("guests", id, { deleted: true });
+      setGuests((gs) => gs.map((g) => (g.id === id ? { ...g, deleted: true } : g)));
+    } catch (e) {
+      console.warn("Failed to delete guest", e);
+    }
+  };
+
+  const restoreGuest = async (id) => {
+    try {
+      await apiPatch("guests", id, { deleted: false });
+      setGuests((gs) => gs.map((g) => (g.id === id ? { ...g, deleted: false } : g)));
+    } catch (e) {
+      console.warn("Failed to restore guest", e);
+    }
+  };
+
   const updateRsvp = (id, rsvp) =>
     setGuests((gs) => gs.map((g) => (g.id === id ? { ...g, rsvp } : g)));
 
-  const confirmed = guests.filter((g) => g.rsvp === "confirmed").length;
-  const pending = guests.filter((g) => g.rsvp === "pending").length;
-  const declined = guests.filter((g) => g.rsvp === "declined").length;
+  const confirmed = activeGuests.filter((g) => g.rsvp === "confirmed").length;
+  const pending = activeGuests.filter((g) => g.rsvp === "pending").length;
+  const declined = activeGuests.filter((g) => g.rsvp === "declined").length;
 
   const rsvpColors = {
     confirmed: { color: COLORS.sage, bg: COLORS.sageLight },
@@ -1245,6 +1558,17 @@ function Guests({ guests, setGuests }) {
       <SectionTitle sub="Manage your guest list and track RSVPs">
         Guest List
       </SectionTitle>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <TrashButton count={deletedGuests.length} onClick={() => setShowTrash((s) => !s)} active={showTrash} />
+      </div>
+
+      {showTrash && (
+        <TrashPanel
+          items={deletedGuests}
+          onRestore={restoreGuest}
+          renderItem={(g) => `${g.name} · ${g.group}`}
+        />
+      )}
 
       <div
         style={{
@@ -1256,7 +1580,7 @@ function Guests({ guests, setGuests }) {
       >
         <StatCard
           label="Total Invited"
-          value={guests.length}
+          value={activeGuests.length}
           accent={COLORS.ink}
         />
         <StatCard label="Confirmed" value={confirmed} accent={COLORS.sage} />
@@ -1538,17 +1862,18 @@ function Guests({ guests, setGuests }) {
                 </td>
                 <td style={{ padding: "10px 16px" }}>
                   <button
-                    onClick={() => removeGuest(g.id)}
+                    onClick={() => deleteGuest(g.id)}
+                    title="Delete guest"
                     style={{
                       background: "none",
                       border: "none",
                       color: COLORS.muted,
                       cursor: "pointer",
-                      fontSize: 16,
+                      fontSize: 15,
                       padding: "0 4px",
                     }}
                   >
-                    ×
+                    🗑
                   </button>
                 </td>
               </tr>
@@ -1935,28 +2260,49 @@ function Checklist({ checklist, setChecklist }) {
     category: "Planning",
     priority: "medium",
   });
-  const categories = [...new Set(checklist.map((t) => t.category))];
   const [filterCat, setFilterCat] = useState("all");
+  const [showTrash, setShowTrash] = useState(false);
+
+  const activeChecklist = checklist.filter((t) => !t.deleted);
+  const deletedTasks = checklist.filter((t) => t.deleted);
+  const categories = [...new Set(activeChecklist.map((t) => t.category))];
 
   const toggle = (id) =>
     setChecklist((cl) =>
       cl.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
     );
-  const removeTask = (id) =>
-    setChecklist((cl) => cl.filter((t) => t.id !== id));
+
+  const deleteTask = async (id) => {
+    try {
+      await apiPatch("checklist", id, { deleted: true });
+      setChecklist((cl) => cl.map((t) => (t.id === id ? { ...t, deleted: true } : t)));
+    } catch (e) {
+      console.warn("Failed to delete task", e);
+    }
+  };
+
+  const restoreTask = async (id) => {
+    try {
+      await apiPatch("checklist", id, { deleted: false });
+      setChecklist((cl) => cl.map((t) => (t.id === id ? { ...t, deleted: false } : t)));
+    } catch (e) {
+      console.warn("Failed to restore task", e);
+    }
+  };
+
   const addTask = () => {
     if (!newTask.task) return;
     setChecklist((cl) => [
       ...cl,
-      { ...newTask, id: Date.now(), done: false, dueMonths: 3 },
+      { ...newTask, id: Date.now(), done: false, dueMonths: 3, deleted: false },
     ]);
     setNewTask({ task: "", category: "Planning", priority: "medium" });
   };
 
-  const filtered = checklist.filter(
+  const filtered = activeChecklist.filter(
     (t) => filterCat === "all" || t.category === filterCat,
   );
-  const done = checklist.filter((t) => t.done).length;
+  const done = activeChecklist.filter((t) => t.done).length;
 
   const priorityColors = {
     high: { color: "#B05050", bg: "#FAE8E8" },
@@ -1969,6 +2315,17 @@ function Checklist({ checklist, setChecklist }) {
       <SectionTitle sub="Every detail for your perfect day, tracked and organised">
         Planning Checklist
       </SectionTitle>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <TrashButton count={deletedTasks.length} onClick={() => setShowTrash((s) => !s)} active={showTrash} />
+      </div>
+
+      {showTrash && (
+        <TrashPanel
+          items={deletedTasks}
+          onRestore={restoreTask}
+          renderItem={(t) => `${t.task} · ${t.category}`}
+        />
+      )}
 
       <div
         style={{
@@ -1981,17 +2338,17 @@ function Checklist({ checklist, setChecklist }) {
         <StatCard
           label="Completed"
           value={done}
-          sub={`of ${checklist.length} tasks`}
+          sub={`of ${activeChecklist.length} tasks`}
           accent={COLORS.sage}
         />
         <StatCard
           label="Remaining"
-          value={checklist.length - done}
+          value={activeChecklist.length - done}
           accent={COLORS.rose}
         />
         <StatCard
           label="Progress"
-          value={`${Math.round((done / checklist.length) * 100)}%`}
+          value={`${Math.round((done / Math.max(1, activeChecklist.length)) * 100)}%`}
           accent={COLORS.gold}
         />
       </div>
@@ -2159,18 +2516,19 @@ function Checklist({ checklist, setChecklist }) {
               {t.category}
             </Badge>
             <button
-              onClick={() => removeTask(t.id)}
+              onClick={() => deleteTask(t.id)}
+              title="Delete task"
               style={{
                 background: "none",
                 border: "none",
                 color: COLORS.muted,
                 cursor: "pointer",
-                fontSize: 16,
+                fontSize: 15,
                 padding: "0 4px",
                 flexShrink: 0,
               }}
             >
-              ×
+              🗑
             </button>
           </Card>
         ))}

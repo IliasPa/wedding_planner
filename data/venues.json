@@ -9,7 +9,8 @@
     "rating": 4.9,
     "selected": false,
     "notes": "Outdoor ceremony space with fountain, indoor reception hall",
-    "image": "🏰"
+    "image": "🏰",
+    "deleted": false
   },
   {
     "id": 2,
@@ -19,9 +20,10 @@
     "price": 6200,
     "style": "Oceanfront",
     "rating": 4.8,
-    "selected": true,
+    "selected": false,
     "notes": "Stunning ocean views, sunset ceremony packages included",
-    "image": "🌊"
+    "image": "🌊",
+    "deleted": false
   },
   {
     "id": 3,
@@ -31,8 +33,9 @@
     "price": 7000,
     "style": "Rustic Vineyard",
     "rating": 4.7,
-    "selected": false,
+    "selected": true,
     "notes": "Private vineyard, wine tasting included for guests",
-    "image": "🍷"
+    "image": "🍷",
+    "deleted": false
   }
 ]

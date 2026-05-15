@@ -5,7 +5,8 @@
     "done": true,
     "category": "Venue",
     "dueMonths": 12,
-    "priority": "high"
+    "priority": "high",
+    "deleted": false
   },
   {
     "id": 2,
