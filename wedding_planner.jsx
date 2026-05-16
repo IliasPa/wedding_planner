@@ -671,6 +671,7 @@ function Budget({ budget, setBudget }) {
   });
   const [editTotal, setEditTotal] = useState(false);
   const [totalInput, setTotalInput] = useState(budget.total);
+  const [expandedCat, setExpandedCat] = useState(null);
   const totalSpent = budget.categories.reduce((s, c) => s + c.spent, 0);
   const remaining = budget.total - totalSpent;
 
@@ -678,11 +679,16 @@ function Budget({ budget, setBudget }) {
     if (!newExpense.name || !newExpense.amount) return;
     const amt = parseFloat(newExpense.amount);
     if (isNaN(amt)) return;
+    const expense = {
+      name: newExpense.name,
+      amount: amt,
+      date: new Date().toLocaleDateString(),
+    };
     setBudget((b) => ({
       ...b,
       categories: b.categories.map((c) =>
         c.id === parseInt(newExpense.category)
-          ? { ...c, spent: c.spent + amt }
+          ? { ...c, spent: c.spent + amt, expenses: [...(c.expenses || []), expense] }
           : c,
       ),
     }));
@@ -703,11 +709,90 @@ function Budget({ budget, setBudget }) {
           marginBottom: 24,
         }}
       >
-        <StatCard
-          label="Total Budget"
-          value={`$${budget.total.toLocaleString()}`}
-          accent={COLORS.ink}
-        />
+        {editTotal ? (
+          <Card style={{ textAlign: "center", padding: "18px 16px" }}>
+            <div
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 12,
+                color: COLORS.muted,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 8,
+                fontWeight: 500,
+              }}
+            >
+              Total Budget
+            </div>
+            <input
+              value={totalInput}
+              onChange={(e) => setTotalInput(e.target.value)}
+              autoFocus
+              type="number"
+              style={{
+                width: "100%",
+                padding: "4px 8px",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 8,
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: 28,
+                fontWeight: 500,
+                textAlign: "center",
+                color: COLORS.ink,
+                background: COLORS.white,
+                boxSizing: "border-box",
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 10 }}>
+              <button
+                onClick={() => {
+                  setBudget((b) => ({ ...b, total: parseFloat(totalInput) || b.total }));
+                  setEditTotal(false);
+                }}
+                style={{
+                  padding: "4px 14px",
+                  background: COLORS.rose,
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                }}
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditTotal(false)}
+                style={{
+                  padding: "4px 14px",
+                  background: "transparent",
+                  color: COLORS.muted,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </Card>
+        ) : (
+          <div
+            onClick={() => { setTotalInput(budget.total); setEditTotal(true); }}
+            title="Click to edit total budget"
+            style={{ cursor: "pointer" }}
+          >
+            <StatCard
+              label="Total Budget"
+              value={`$${budget.total.toLocaleString()}`}
+              accent={COLORS.ink}
+              sub="Click to edit"
+            />
+          </div>
+        )}
         <StatCard
           label="Total Spent"
           value={`$${totalSpent.toLocaleString()}`}
@@ -720,79 +805,6 @@ function Budget({ budget, setBudget }) {
           sub={remaining >= 0 ? "on track" : "over budget!"}
           accent={remaining >= 0 ? COLORS.sage : "#C44"}
         />
-      </div>
-
-      <div
-        style={{
-          marginBottom: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 13,
-            color: COLORS.muted,
-          }}
-        >
-          Overall: {Math.round((totalSpent / budget.total) * 100)}% spent
-        </span>
-        {editTotal ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              value={totalInput}
-              onChange={(e) => setTotalInput(e.target.value)}
-              style={{
-                width: 120,
-                padding: "4px 8px",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 8,
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-                background: COLORS.white,
-              }}
-            />
-            <button
-              onClick={() => {
-                setBudget((b) => ({
-                  ...b,
-                  total: parseFloat(totalInput) || b.total,
-                }));
-                setEditTotal(false);
-              }}
-              style={{
-                padding: "4px 12px",
-                background: COLORS.rose,
-                color: "#fff",
-                border: "none",
-                borderRadius: 8,
-                cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-              }}
-            >
-              Save
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setEditTotal(true)}
-            style={{
-              padding: "4px 12px",
-              background: "transparent",
-              color: COLORS.rose,
-              border: `1px solid ${COLORS.rose}`,
-              borderRadius: 8,
-              cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13,
-            }}
-          >
-            Edit Budget
-          </button>
-        )}
       </div>
 
       <div
@@ -824,6 +836,8 @@ function Budget({ budget, setBudget }) {
       >
         {budget.categories.map((cat) => {
           const pct = Math.min(100, Math.round((cat.spent / cat.budget) * 100));
+          const isExpanded = expandedCat === cat.id;
+          const catExpenses = cat.expenses || [];
           return (
             <Card key={cat.id} style={{ padding: "16px 20px" }}>
               <div
@@ -896,14 +910,94 @@ function Budget({ budget, setBudget }) {
               </div>
               <div
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12,
-                  color: COLORS.muted,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginTop: 6,
                 }}
               >
-                {pct}% used · ${(cat.budget - cat.spent).toLocaleString()} left
+                <div
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 12,
+                    color: COLORS.muted,
+                  }}
+                >
+                  {pct}% used · ${(cat.budget - cat.spent).toLocaleString()} left
+                </div>
+                {catExpenses.length > 0 && (
+                  <button
+                    onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
+                    style={{
+                      padding: "2px 9px",
+                      background: isExpanded ? COLORS.roseLight : "transparent",
+                      color: COLORS.rose,
+                      border: `1px solid ${COLORS.roseMid}`,
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 11,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {isExpanded ? "Hide" : `${catExpenses.length} expense${catExpenses.length !== 1 ? "s" : ""}`}
+                  </button>
+                )}
               </div>
+              {isExpanded && catExpenses.length > 0 && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    borderTop: `1px solid ${COLORS.border}`,
+                    paddingTop: 10,
+                  }}
+                >
+                  {catExpenses.map((exp, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingBottom: i < catExpenses.length - 1 ? 8 : 0,
+                        marginBottom: i < catExpenses.length - 1 ? 8 : 0,
+                        borderBottom: i < catExpenses.length - 1 ? `1px solid ${COLORS.border}` : "none",
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontSize: 13,
+                            color: COLORS.ink,
+                          }}
+                        >
+                          {exp.name}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontSize: 11,
+                            color: COLORS.muted,
+                          }}
+                        >
+                          {exp.date}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: COLORS.ink,
+                        }}
+                      >
+                        ${exp.amount.toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           );
         })}

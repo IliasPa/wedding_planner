@@ -11,12 +11,14 @@ A personal wedding planning desktop app built with Electron + React. Manage your
 The initial version was a minimal Electron shell wrapping a single `wedding_planner.jsx` file. React and Babel were loaded via CDN so the UI could be previewed without a build step.
 
 **What it included:**
+
 - Electron window rendering `index.html` + `wedding_planner.jsx`
 - React UI powered by CDN React + in-browser Babel transpilation
 - No data persistence — all state was in-memory and lost on reload
 - Basic setup: `npm install` + `npm start`
 
 **What it lacked:**
+
 - No way to save changes
 - All sample data was hardcoded inside the JSX file
 
@@ -27,6 +29,7 @@ The initial version was a minimal Electron shell wrapping a single `wedding_plan
 v1.1 introduced a proper data layer so changes survive reloads.
 
 **What changed:**
+
 - Sample data extracted from the JSX into separate `data/*.json` files:
   `venues`, `photographers`, `budget`, `guests`, `tables`, `checklist`, `vendors`, `nav`, `meta`
 - `dataStore.js` helper loads JSON files at startup and writes edits back via `localStorage`
@@ -35,6 +38,7 @@ v1.1 introduced a proper data layer so changes survive reloads.
 - If `index.html` is opened directly in a browser (not Electron), changes are saved to `localStorage` only and do not modify files on disk
 
 **Architecture:**
+
 ```
 Renderer (React) → window.electronAPI.writeDataFile() → preload IPC → main.js → data/*.json
 ```
@@ -46,6 +50,7 @@ Renderer (React) → window.electronAPI.writeDataFile() → preload IPC → main
 v1.2 replaces the IPC-based write mechanism with a full local REST API server (`server.js`) running on `http://localhost:3001`. The UI now communicates with the backend for all data operations.
 
 **What changed:**
+
 - Added `server.js`: an Express REST API with full CRUD support for all collections
 - Added `Start.command`: a double-clickable launcher that starts the API server and opens the Electron window together
 - UI now uses `apiPost()` / `apiPatch()` helpers to call the REST API instead of writing through IPC
@@ -55,35 +60,51 @@ v1.2 replaces the IPC-based write mechanism with a full local REST API server (`
 
 **API endpoints (`http://localhost:3001/api`):**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/:collection` | Fetch all items in a collection |
-| `POST` | `/api/:collection` | Add a new item (auto-generates ID if missing) |
-| `PUT` | `/api/:collection/:id` | Update a single item by ID |
-| `PUT` | `/api/:collection` | Replace the entire collection |
-| `DELETE` | `/api/:collection/:id` | Delete an item by ID |
+| Method   | Path                   | Description                                   |
+| -------- | ---------------------- | --------------------------------------------- |
+| `GET`    | `/api/:collection`     | Fetch all items in a collection               |
+| `POST`   | `/api/:collection`     | Add a new item (auto-generates ID if missing) |
+| `PUT`    | `/api/:collection/:id` | Update a single item by ID                    |
+| `PUT`    | `/api/:collection`     | Replace the entire collection                 |
+| `DELETE` | `/api/:collection/:id` | Delete an item by ID                          |
 
 **Collections:** `venues`, `photographers`, `budget`, `guests`, `tables`, `checklist`, `vendors`, `nav`, `meta`
 
 **Architecture:**
+
 ```
 Renderer (React) → fetch() → Express server (localhost:3001) → data/*.json
 ```
 
 ---
 
+### v1.3 — Itemized Expense Tracking
+
+v1.3 adds per-category expense line items to the Budget section, so you can log exactly what you paid for — not just how much.
+
+**What changed:**
+
+- Each budget category now stores an `expenses` array in `budget.json`
+- New **Add an Expense** form (description, category, amount) logs individual line items; the category's `spent` total updates automatically
+- Each category card shows a collapsible expense list (toggle with the **N expenses** button)
+- Every expense entry records name, amount, and the date it was added
+
+**No infrastructure changes** — the REST API, IPC bridge, and file layout are the same as v1.2.
+
+---
+
 ## Features
 
-| Section | Description |
-|---------|-------------|
-| **Overview** | Dashboard with days-to-wedding countdown, budget progress, guest RSVP summary, task completion, and selected venue/photographer |
-| **Budget** | Set a total budget, add spending categories, track spent vs. budgeted per category with visual progress bars |
-| **Venues** | Add venues with capacity, price, rating, and notes; mark one as selected |
-| **Photographers** | Add photographers with style, price, rating; mark one as selected |
-| **Guests** | Add guests with RSVP status (confirmed / pending / declined), search and filter, dietary notes |
-| **Tables** | Drag-and-drop seating planner — assign guests to named tables |
-| **Checklist** | Task list grouped by category with done/undone toggle and progress tracking |
-| **Vendors** | Track vendors (florist, catering, etc.) with contact info and status |
+| Section           | Description                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Overview**      | Dashboard with days-to-wedding countdown, budget progress, guest RSVP summary, task completion, and selected venue/photographer |
+| **Budget**        | Set a total budget, add spending categories, track spent vs. budgeted per category with visual progress bars                    |
+| **Venues**        | Add venues with capacity, price, rating, and notes; mark one as selected                                                        |
+| **Photographers** | Add photographers with style, price, rating; mark one as selected                                                               |
+| **Guests**        | Add guests with RSVP status (confirmed / pending / declined), search and filter, dietary notes                                  |
+| **Tables**        | Drag-and-drop seating planner — assign guests to named tables                                                                   |
+| **Checklist**     | Task list grouped by category with done/undone toggle and progress tracking                                                     |
+| **Vendors**       | Track vendors (florist, catering, etc.) with contact info and status                                                            |
 
 All sections support soft-delete (trash) with restore — deleted items are hidden but recoverable.
 
@@ -110,9 +131,9 @@ npm install
 
 ---
 
-## Running the App (v1.2)
+## Running the App (v1.3)
 
-v1.2 requires both the API server and the Electron window to be running.
+v1.3 requires both the API server and the Electron window to be running.
 
 **Option A — double-click launcher (macOS):**
 
@@ -121,11 +142,13 @@ Double-click `Start.command` in Finder. This starts the API server and opens the
 **Option B — two terminals:**
 
 Terminal 1 — start the API server:
+
 ```bash
 npm run server
 ```
 
 Terminal 2 — start the Electron window:
+
 ```bash
 npm start
 ```

@@ -119,7 +119,7 @@
     "plusOne": false,
     "id": 1778866133516,
     "table": 3,
-    "deleted": false
+    "deleted": true
   },
   {
     "name": "ilia4",
@@ -139,7 +139,7 @@
     "plusOne": false,
     "id": 1778874228311,
     "table": null,
-    "deleted": false
+    "deleted": true
   },
   {
     "name": "Zan",
